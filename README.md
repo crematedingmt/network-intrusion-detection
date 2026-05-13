@@ -1,3 +1,7 @@
+# Members
+Sharlotte Lim, Hülya Ayça Önerge
+
+
 # Machine Learning Model
 Built and optimized a machine learning model for network intrusion detection.
 
