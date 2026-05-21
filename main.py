@@ -1,4 +1,7 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import LabelEncoder
 
 # ==============================================================
@@ -99,32 +102,83 @@ print(f"\nTest set class distribution:")
 print(y_test.value_counts())
 
 # ==============================================================
-# YOUR WORK STARTS HERE
+# 5. BASELINE MODEL 
 # ==============================================================
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
 
-# ==============================================================
-# 5. BASELINE MODEL
-# ==============================================================
-
 print("\nTraining baseline Random Forest model...")
 
-model = RandomForestClassifier(random_state=42)
-model.fit(X_train, y_train)
-
-# Predict on test set
-y_pred = model.predict(X_test)
+model = RandomForestClassifier(random_state=42, n_jobs=-1)
 
 # ==============================================================
-# 6. EVALUATION
+# 6. CROSS-VALIDATION
+# ==============================================================
+
+cv_scores = cross_val_score(
+    model,
+    X_train,
+    y_train,
+    cv=5,
+    scoring='f1_macro',
+    n_jobs=-1
+)
+
+print("\n==================================================")
+print("CROSS-VALIDATION RESULTS")
+print("==================================================")
+
+print(f"\nCross-validation Macro F1: {cv_scores.mean():.4f}")
+print(f"Standard deviation: {cv_scores.std():.4f}")
+# ==============================================================
+# 7. TRAIN FINAL MODEL
+# ==============================================================
+
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+# ==============================================================
+# 8. EVALUATION
 # ==============================================================
 
 macro_f1 = f1_score(y_test, y_pred, average='macro')
-print(f"\nMacro F1 Score: {macro_f1:.4f}")
+
+print("\n==================================================")
+print("TEST SET RESULTS")
+print("==================================================")
+
+print(f"\nTest Macro F1 Score: {macro_f1:.4f}")
 
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred))
 
-print("\nConfusion Matrix:")
-print(confusion_matrix(y_test, y_pred))
+# ==============================================================
+# 9. CONFUSION MATRIX
+# ==============================================================
+
+labels = ["DoS", "Normal", "Probe", "R2L", "U2R"]
+
+cm = confusion_matrix(y_test, y_pred, labels=labels)
+
+plt.figure(figsize=(8, 6))
+
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    cmap="Blues",
+    xticklabels=labels,
+    yticklabels=labels
+)
+
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Random Forest Baseline - Confusion Matrix")
+
+plt.tight_layout()
+
+plt.savefig("confusion_matrix.png", dpi=150)
+
+plt.show()
+
+print("\nConfusion matrix saved as confusion_matrix.png")
