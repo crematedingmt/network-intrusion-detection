@@ -101,18 +101,30 @@ print(y_test.value_counts())
 # ==============================================================
 # YOUR WORK STARTS HERE
 # ==============================================================
-# 
-# You now have:
-#   X_train, y_train  — training features and labels (5 categories)
-#   X_test, y_test    — test features and labels (5 categories)
-#
-# Your task:
-#   1. Train one or more models on X_train / y_train
-#   2. Predict on X_test
-#   3. Evaluate using macro F1-score
-#
-# Useful imports for evaluation:
-#   from sklearn.metrics import classification_report, confusion_matrix, f1_score
-#
-# To compute macro F1:
-#   f1_score(y_test, y_pred, average='macro')
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix, f1_score
+
+# ==============================================================
+# 5. BASELINE MODEL
+# ==============================================================
+
+print("\nTraining baseline Random Forest model...")
+
+model = RandomForestClassifier(random_state=42)
+model.fit(X_train, y_train)
+
+# Predict on test set
+y_pred = model.predict(X_test)
+
+# ==============================================================
+# 6. EVALUATION
+# ==============================================================
+
+macro_f1 = f1_score(y_test, y_pred, average='macro')
+print(f"\nMacro F1 Score: {macro_f1:.4f}")
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
