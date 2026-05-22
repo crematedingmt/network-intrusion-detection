@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import LabelEncoder
+from imblearn.over_sampling import SMOTE
 
 # ==============================================================
 # 1. LOAD DATA
@@ -117,8 +118,8 @@ model = RandomForestClassifier(random_state=42, n_jobs=-1, class_weight='balance
 
 cv_scores = cross_val_score(
     model,
-    X_train,
-    y_train,
+    X_train_smote,
+    y_train_smote,
     cv=5,
     scoring='f1_macro',
     n_jobs=-1
@@ -134,7 +135,7 @@ print(f"Standard deviation: {cv_scores.std():.4f}")
 # 7. TRAIN FINAL MODEL
 # ==============================================================
 
-model.fit(X_train, y_train)
+model.fit(X_train_smote, y_train_smote)
 
 y_pred = model.predict(X_test)
 # ==============================================================
