@@ -96,6 +96,9 @@ y_train = df_train_processed['category']
 X_test = df_test_processed.drop(columns=['category'])
 y_test = df_test_processed['category']
 
+smote = SMOTE(random_state=42)
+X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
+
 print(f"\nFeatures: {X_train.shape[1]}")
 print(f"\nTraining set class distribution:")
 print(y_train.value_counts())
