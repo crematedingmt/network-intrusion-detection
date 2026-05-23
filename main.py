@@ -177,7 +177,7 @@ sns.heatmap(
 
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
-plt.title("Random Forest Baseline - Confusion Matrix")
+plt.title("XGBoost - Confusion Matrix")
 
 plt.tight_layout()
 
