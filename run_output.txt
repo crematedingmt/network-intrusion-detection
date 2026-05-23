@@ -1,1 +1,52 @@
-ERROR: The process "39512" not found.
+Loading data...
+Training set: 125973 records, 42 columns
+Test set:     22544 records, 42 columns
+
+Features: 40
+
+Training set class distribution:
+category
+Normal    67343
+DoS       45927
+Probe     11656
+R2L         995
+U2R          52
+Name: count, dtype: int64
+
+Test set class distribution:
+category
+Normal    9711
+DoS       7460
+R2L       2885
+Probe     2421
+U2R         67
+Name: count, dtype: int64
+
+Training baseline Random Forest model...
+
+==================================================
+CROSS-VALIDATION RESULTS
+==================================================
+
+Cross-validation Macro F1: 0.9997
+Standard deviation: 0.0001
+
+==================================================
+TEST SET RESULTS
+==================================================
+
+Test Macro F1 Score: 0.5303
+
+Classification Report:
+              precision    recall  f1-score   support
+
+         DoS       0.96      0.79      0.87      7460
+      Normal       0.66      0.97      0.78      9711
+       Probe       0.85      0.64      0.73      2421
+         R2L       0.95      0.07      0.14      2885
+         U2R       0.62      0.07      0.13        67
+
+    accuracy                           0.76     22544
+   macro avg       0.81      0.51      0.53     22544
+weighted avg       0.82      0.76      0.72     22544
+

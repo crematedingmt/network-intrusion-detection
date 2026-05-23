@@ -107,151 +107,134 @@ print(y_train.value_counts())
 print(f"\nTest set class distribution:")
 print(y_test.value_counts())
 
+# ============================================================== 
+# 5. BASELINE MODEL
 # ==============================================================
-# 5. BASELINE MODEL 
-# ==============================================================
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
 
+labels = ["DoS", "Normal", "Probe", "R2L", "U2R"]
+
+def plot_confusion_matrix(y_true, y_pred, labels, title, filename):
+    cm = confusion_matrix(y_true, y_pred, labels=labels)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=labels,
+        yticklabels=labels
+    )
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title(title)
+    plt.tight_layout()
+    plt.savefig(filename, dpi=150)
+    plt.close()
+
 print("\nTraining baseline Random Forest model...")
 
-model = RandomForestClassifier(random_state=42, n_jobs=-1)
+baseline_model = RandomForestClassifier(random_state=42, n_jobs=-1)
 
-# ==============================================================
-# 6. CROSS-VALIDATION
-# ==============================================================
-
+# Cross-validation
 cv_scores = cross_val_score(
-    model,
+    baseline_model,
     X_train_smote,
     y_train_smote,
     cv=5,
-    scoring='f1_macro',
+    scoring="f1_macro",
     n_jobs=-1
 )
 
 print("\n==================================================")
 print("CROSS-VALIDATION RESULTS")
 print("==================================================")
-
 print(f"\nCross-validation Macro F1: {cv_scores.mean():.4f}")
 print(f"Standard deviation: {cv_scores.std():.4f}")
-# ==============================================================
-# 7. TRAIN FINAL MODEL
-# ==============================================================
 
-model.fit(X_train_smote, y_train_smote)
+# Train final baseline model
+baseline_model.fit(X_train_smote, y_train_smote)
+y_pred_baseline = baseline_model.predict(X_test)
 
-y_pred = model.predict(X_test)
-# ==============================================================
-# 8. EVALUATION
-# ==============================================================
-
-macro_f1 = f1_score(y_test, y_pred, average='macro')
+# Test evaluation
+baseline_macro_f1 = f1_score(y_test, y_pred_baseline, average="macro")
 
 print("\n==================================================")
 print("TEST SET RESULTS")
 print("==================================================")
-
-print(f"\nTest Macro F1 Score: {macro_f1:.4f}")
-
+print(f"\nTest Macro F1 Score: {baseline_macro_f1:.4f}")
 print("\nClassification Report:")
-print(classification_report(y_test, y_pred))
+print(classification_report(y_test, y_pred_baseline))
 
-# ==============================================================
-# 9. CONFUSION MATRIX
-# ==============================================================
-
-labels = ["DoS", "Normal", "Probe", "R2L", "U2R"]
-
-cm = confusion_matrix(y_test, y_pred, labels=labels)
-
-plt.figure(figsize=(8, 6))
-
-sns.heatmap(
-    cm,
-    annot=True,
-    fmt="d",
-    cmap="Blues",
-    xticklabels=labels,
-    yticklabels=labels
+plot_confusion_matrix(
+    y_test,
+    y_pred_baseline,
+    labels,
+    "Random Forest Baseline - Confusion Matrix",
+    "confusion_matrix_rf_baseline.png"
 )
 
-plt.xlabel("Predicted")
-plt.ylabel("Actual")
-plt.title("Tuned XGBoost - Confusion Matrix")
+print("\nConfusion matrix saved as confusion_matrix_rf_baseline.png")
 
-plt.tight_layout()
-
-plt.savefig("confusion_matrix.png", dpi=150)
-
-plt.show()
-
-print("\nConfusion matrix saved as confusion_matrix.png")
-
+# ============================================================== 
+# 6. EXPERIMENT 5 — XGBOOST
 # ==============================================================
-# 10. EXPERIMENT 5 — XGBOOST
-# ==============================================================
-
-from xgboost import XGBClassifier
-from sklearn.preprocessing import LabelEncoder
 
 print("\n==================================================")
 print("EXPERIMENT 5 — XGBOOST")
 print("==================================================")
 
-# Encode labels numerically for XGBoost
 label_encoder = LabelEncoder()
-
 y_train_encoded = label_encoder.fit_transform(y_train_smote)
-y_test_encoded = label_encoder.transform(y_test)
 
-# Create XGBoost model
 xgb_model = XGBClassifier(
     random_state=42,
-    eval_metric='mlogloss',
+    eval_metric="mlogloss",
     n_jobs=-1
 )
 
-# Cross-validation
 xgb_cv_scores = cross_val_score(
     xgb_model,
     X_train_smote,
     y_train_encoded,
     cv=5,
-    scoring='f1_macro',
+    scoring="f1_macro",
     n_jobs=-1
 )
 
 print(f"\nXGBoost CV Macro F1: {xgb_cv_scores.mean():.4f}")
 print(f"XGBoost CV Std: {xgb_cv_scores.std():.4f}")
 
-# Train model
 xgb_model.fit(X_train_smote, y_train_encoded)
-
-# Predict
 y_pred_xgb_encoded = xgb_model.predict(X_test)
-
-# Convert predictions back to category names
 y_pred_xgb = label_encoder.inverse_transform(y_pred_xgb_encoded)
 
-# Evaluate
-xgb_macro_f1 = f1_score(y_test, y_pred_xgb, average='macro')
+xgb_macro_f1 = f1_score(y_test, y_pred_xgb, average="macro")
 
 print(f"\nXGBoost Test Macro F1: {xgb_macro_f1:.4f}")
-
 print("\nXGBoost Classification Report:")
 print(classification_report(y_test, y_pred_xgb))
 
-# ==============================================================
-# 11. EXPERIMENT 6 — TUNED XGBOOST WITH RANDOMIZEDSEARCHCV
+plot_confusion_matrix(
+    y_test,
+    y_pred_xgb,
+    labels,
+    "XGBoost - Confusion Matrix",
+    "confusion_matrix_xgboost.png"
+)
+
+print("\nConfusion matrix saved as confusion_matrix_xgboost.png")
+
+# ============================================================== 
+# 7. EXPERIMENT 6 — TUNED XGBOOST WITH RANDOMIZEDSEARCHCV
 # ==============================================================
 
 print("\n==================================================")
 print("EXPERIMENT 6 — TUNED XGBOOST")
 print("==================================================")
 
-# Search space for tuning
 param_grid = {
     "n_estimators": [100, 200, 300],
     "max_depth": [4, 6, 8],
@@ -259,7 +242,6 @@ param_grid = {
     "subsample": [0.8, 1.0]
 }
 
-# Base XGBoost model
 xgb_base = XGBClassifier(
     random_state=42,
     eval_metric="mlogloss",
@@ -267,7 +249,6 @@ xgb_base = XGBClassifier(
     n_jobs=-1
 )
 
-# Randomized search
 random_search = RandomizedSearchCV(
     estimator=xgb_base,
     param_distributions=param_grid,
@@ -279,26 +260,28 @@ random_search = RandomizedSearchCV(
     n_jobs=-1
 )
 
-# Fit on the SMOTE-balanced training set
 random_search.fit(X_train_smote, y_train_encoded)
 
 print("\nBest Parameters:")
 print(random_search.best_params_)
-
 print(f"\nBest CV Macro F1: {random_search.best_score_:.4f}")
 
-# Best model from search
 best_xgb = random_search.best_estimator_
-
-# Predict on test set
 y_pred_best_encoded = best_xgb.predict(X_test)
-
-# Convert predictions back to original labels
 y_pred_best = label_encoder.inverse_transform(y_pred_best_encoded)
 
-# Evaluate
 best_macro_f1 = f1_score(y_test, y_pred_best, average="macro")
-print(f"\nTuned XGBoost Test Macro F1: {best_macro_f1:.4f}")
 
+print(f"\nTuned XGBoost Test Macro F1: {best_macro_f1:.4f}")
 print("\nTuned XGBoost Classification Report:")
 print(classification_report(y_test, y_pred_best))
+
+plot_confusion_matrix(
+    y_test,
+    y_pred_best,
+    labels,
+    "Tuned XGBoost - Confusion Matrix",
+    "confusion_matrix_tuned_xgboost.png"
+)
+
+print("\nConfusion matrix saved as confusion_matrix_tuned_xgboost.png")
