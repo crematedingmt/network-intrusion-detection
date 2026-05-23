@@ -113,7 +113,7 @@ from sklearn.metrics import classification_report, confusion_matrix, f1_score
 
 print("\nTraining baseline Random Forest model...")
 
-model = RandomForestClassifier(random_state=42, n_jobs=-1, class_weight='balanced')
+model = RandomForestClassifier(random_state=42, n_jobs=-1)
 
 # ==============================================================
 # 6. CROSS-VALIDATION
