@@ -4,6 +4,8 @@ import seaborn as sns
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
+from sklearn.model_selection import RandomizedSearchCV
+from xgboost import XGBClassifier
 
 # ==============================================================
 # 1. LOAD DATA
@@ -177,7 +179,7 @@ sns.heatmap(
 
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
-plt.title("XGBoost - Confusion Matrix")
+plt.title("Tuned XGBoost - Confusion Matrix")
 
 plt.tight_layout()
 
@@ -240,3 +242,64 @@ print(f"\nXGBoost Test Macro F1: {xgb_macro_f1:.4f}")
 
 print("\nXGBoost Classification Report:")
 print(classification_report(y_test, y_pred_xgb))
+
+# ==============================================================
+# 11. EXPERIMENT 6 — TUNED XGBOOST WITH RANDOMIZEDSEARCHCV
+# ==============================================================
+
+print("\n==================================================")
+print("EXPERIMENT 6 — TUNED XGBOOST")
+print("==================================================")
+
+# Parameter search space
+param_grid = {
+    "n_estimators": [100, 200, 300],
+    "max_depth": [4, 6, 8],
+    "learning_rate": [0.05, 0.1, 0.2],
+    "scale_pos_weight": [1, 3, 5],
+    "subsample": [0.8, 1.0]
+}
+
+# Base XGBoost model
+xgb_base = XGBClassifier(
+    random_state=42,
+    eval_metric="mlogloss",
+    objective="multi:softprob",
+    n_jobs=-1
+)
+
+# Randomized Search
+random_search = RandomizedSearchCV(
+    estimator=xgb_base,
+    param_distributions=param_grid,
+    n_iter=5,
+    scoring="f1_macro",
+    cv=3,
+    verbose=1,
+    random_state=42,
+    n_jobs=-1
+)
+
+# Fit search on the SMOTE-balanced training set
+random_search.fit(X_train_smote, y_train_encoded)
+
+print("\nBest Parameters:")
+print(random_search.best_params_)
+
+print(f"\nBest CV Macro F1: {random_search.best_score_:.4f}")
+
+# Best model
+best_xgb = random_search.best_estimator_
+
+# Predict on test set
+y_pred_best_encoded = best_xgb.predict(X_test)
+
+# Convert predictions back to class names
+y_pred_best = label_encoder.inverse_transform(y_pred_best_encoded)
+
+# Evaluate
+best_macro_f1 = f1_score(y_test, y_pred_best, average="macro")
+print(f"\nTuned XGBoost Test Macro F1: {best_macro_f1:.4f}")
+
+print("\nTuned XGBoost Classification Report:")
+print(classification_report(y_test, y_pred_best))
