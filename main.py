@@ -251,12 +251,11 @@ print("\n==================================================")
 print("EXPERIMENT 6 — TUNED XGBOOST")
 print("==================================================")
 
-# Parameter search space
+# Search space for tuning
 param_grid = {
     "n_estimators": [100, 200, 300],
     "max_depth": [4, 6, 8],
     "learning_rate": [0.05, 0.1, 0.2],
-    "scale_pos_weight": [1, 3, 5],
     "subsample": [0.8, 1.0]
 }
 
@@ -268,7 +267,7 @@ xgb_base = XGBClassifier(
     n_jobs=-1
 )
 
-# Randomized Search
+# Randomized search
 random_search = RandomizedSearchCV(
     estimator=xgb_base,
     param_distributions=param_grid,
@@ -280,7 +279,7 @@ random_search = RandomizedSearchCV(
     n_jobs=-1
 )
 
-# Fit search on the SMOTE-balanced training set
+# Fit on the SMOTE-balanced training set
 random_search.fit(X_train_smote, y_train_encoded)
 
 print("\nBest Parameters:")
@@ -288,13 +287,13 @@ print(random_search.best_params_)
 
 print(f"\nBest CV Macro F1: {random_search.best_score_:.4f}")
 
-# Best model
+# Best model from search
 best_xgb = random_search.best_estimator_
 
 # Predict on test set
 y_pred_best_encoded = best_xgb.predict(X_test)
 
-# Convert predictions back to class names
+# Convert predictions back to original labels
 y_pred_best = label_encoder.inverse_transform(y_pred_best_encoded)
 
 # Evaluate
