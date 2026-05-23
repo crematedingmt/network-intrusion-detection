@@ -186,3 +186,57 @@ plt.savefig("confusion_matrix.png", dpi=150)
 plt.show()
 
 print("\nConfusion matrix saved as confusion_matrix.png")
+
+# ==============================================================
+# 10. EXPERIMENT 5 — XGBOOST
+# ==============================================================
+
+from xgboost import XGBClassifier
+from sklearn.preprocessing import LabelEncoder
+
+print("\n==================================================")
+print("EXPERIMENT 5 — XGBOOST")
+print("==================================================")
+
+# Encode labels numerically for XGBoost
+label_encoder = LabelEncoder()
+
+y_train_encoded = label_encoder.fit_transform(y_train_smote)
+y_test_encoded = label_encoder.transform(y_test)
+
+# Create XGBoost model
+xgb_model = XGBClassifier(
+    random_state=42,
+    eval_metric='mlogloss',
+    n_jobs=-1
+)
+
+# Cross-validation
+xgb_cv_scores = cross_val_score(
+    xgb_model,
+    X_train_smote,
+    y_train_encoded,
+    cv=5,
+    scoring='f1_macro',
+    n_jobs=-1
+)
+
+print(f"\nXGBoost CV Macro F1: {xgb_cv_scores.mean():.4f}")
+print(f"XGBoost CV Std: {xgb_cv_scores.std():.4f}")
+
+# Train model
+xgb_model.fit(X_train_smote, y_train_encoded)
+
+# Predict
+y_pred_xgb_encoded = xgb_model.predict(X_test)
+
+# Convert predictions back to category names
+y_pred_xgb = label_encoder.inverse_transform(y_pred_xgb_encoded)
+
+# Evaluate
+xgb_macro_f1 = f1_score(y_test, y_pred_xgb, average='macro')
+
+print(f"\nXGBoost Test Macro F1: {xgb_macro_f1:.4f}")
+
+print("\nXGBoost Classification Report:")
+print(classification_report(y_test, y_pred_xgb))
